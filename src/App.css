@@ -12,6 +12,9 @@ body {
   min-height: 100vh;
   padding: 20px;
   color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 @keyframes gradientBG {
@@ -29,6 +32,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: calc(100vh - 40px); /* Account for body padding */
 }
 
 .app-header {
