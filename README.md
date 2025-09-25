@@ -7,8 +7,16 @@ A beautiful and responsive weather application built with React and Vite that di
 - Current weather conditions (temperature, humidity, wind, pressure)
 - 5-day weather forecast
 - Search for weather in different cities
+- Auto-suggest city names as you type
 - Responsive design for all devices
-- Beautiful UI with gradient backgrounds and modern styling
+- Beautiful neumorphic UI with gradient backgrounds and modern styling
+- Real-time weather data from OpenWeatherMap API
+
+## Screenshot
+
+![Weather App Screenshot](screenshot.png)
+
+_Note: Add your actual screenshot to the `screenshots/` directory with the filename `weather-app-screenshot.png`_
 
 ## Setup
 
@@ -19,7 +27,12 @@ A beautiful and responsive weather application built with React and Vite that di
    ```
    VITE_OPENWEATHER_API_KEY=your_actual_api_key_here
    ```
-5. Start the development server: `npm run dev`
+5. Create a `screenshots` directory and add your screenshot (optional):
+   ```
+   mkdir screenshots
+   # Add your screenshot as screenshots/weather-app-screenshot.png
+   ```
+6. Start the development server: `npm run dev`
 
 ## Technologies Used
 
@@ -34,7 +47,15 @@ A beautiful and responsive weather application built with React and Vite that di
 This app uses the OpenWeatherMap API to fetch real weather data. You can find more information about the API endpoints used:
 - Current weather: `/data/2.5/weather`
 - 5-day forecast: `/data/2.5/forecast`
+- City geocoding: `/geo/1.0/direct`
 
 ## Contributing
 
 Feel free to submit issues or pull requests to improve the application.
+
+## Screenshots Directory
+
+If you'd like to add your own screenshots of the app:
+1. Create a `screenshots` directory in the project root
+2. Add your screenshots with descriptive names (e.g., `desktop-view.png`, `mobile-view.png`, `search-suggestions.png`)
+3. Update this README to showcase your screenshots
