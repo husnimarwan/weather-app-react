@@ -8,11 +8,15 @@ const WeatherApp = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [city, setCity] = useState('London') // Default city
+  const [inputValue, setInputValue] = useState(city)
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   // Function to fetch weather data
   const fetchWeatherData = async (cityName) => {
     setLoading(true)
     setError(null)
+    setShowSuggestions(false) // Hide suggestions after search
     
     try {
       // Log the API key to verify it's loaded correctly (for debugging)
@@ -100,31 +104,110 @@ const WeatherApp = () => {
     }
   }
 
+  // Function to fetch city suggestions
+  const fetchCitySuggestions = async (input) => {
+    if (input.length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    try {
+      // Using OpenWeatherMap's geocoding API for city suggestions
+      const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
+      if (!API_KEY || API_KEY.length === 0) return
+
+      const response = await axios.get(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${input}&limit=5&appid=${API_KEY}`
+      )
+      
+      if (response.data && Array.isArray(response.data)) {
+        setSuggestions(response.data)
+        setShowSuggestions(true)
+      } else {
+        setSuggestions([])
+        setShowSuggestions(false)
+      }
+    } catch (err) {
+      console.error('Error fetching city suggestions:', err)
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
   useEffect(() => {
     fetchWeatherData(city)
   }, [city])
 
   const handleSearch = (e) => {
     e.preventDefault()
-    const formData = new FormData(e.target)
-    const searchCity = formData.get('city')
-    if (searchCity.trim()) {
-      setCity(searchCity)
+    if (inputValue.trim()) {
+      setCity(inputValue.trim())
     }
   }
+
+  const handleInputChange = (e) => {
+    const value = e.target.value
+    setInputValue(value)
+    
+    // Debounce the suggestion fetching to avoid too many API calls
+    clearTimeout(window.suggestionTimeout)
+    window.suggestionTimeout = setTimeout(() => {
+      fetchCitySuggestions(value)
+    }, 300)
+  }
+
+  const handleSuggestionClick = (suggestion) => {
+    setInputValue(`${suggestion.name}, ${suggestion.country}`)
+    setCity(suggestion.name)
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
+
+  const handleInputFocus = () => {
+    if (suggestions.length > 0) {
+      setShowSuggestions(true)
+    }
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (window.suggestionTimeout) {
+        clearTimeout(window.suggestionTimeout)
+      }
+    }
+  }, [])
 
   return (
     <div className="weather-app">
       <h1>Weather Forecast App</h1>
       
       <form onSubmit={handleSearch} className="search-form">
-        <input 
-          type="text" 
-          name="city" 
-          placeholder="Enter city name" 
-          defaultValue={city}
-          className="search-input"
-        />
+        <div className="search-container">
+          <input 
+            type="text" 
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            placeholder="Enter city name" 
+            className="search-input"
+            autoComplete="off"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="suggestions-dropdown">
+              {suggestions.map((suggestion, index) => (
+                <div 
+                  key={index} 
+                  className="suggestion-item"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion.name}, {suggestion.country}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <button type="submit" className="search-button">Search</button>
       </form>
       
