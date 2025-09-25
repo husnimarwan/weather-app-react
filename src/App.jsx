@@ -82,8 +82,32 @@ const WeatherApp = () => {
         `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${API_KEY}&units=metric`
       );
       
+      // Extract one forecast per day (every 8 entries ≈ every 24 hours)
+      const dailyForecasts = [];
+      const now = new Date();
+      const seenDays = new Set();
+      
+      for (const item of forecastResponse.data.list) {
+        const date = new Date(item.dt * 1000);
+        const dayKey = date.toDateString(); // Use date string as unique key for the day
+        
+        // Skip if it's the same day as today or we've already seen this day
+        if (date.getDate() === now.getDate() && date.getMonth() === now.getMonth()) {
+          continue;
+        }
+        
+        if (!seenDays.has(dayKey) && dailyForecasts.length < 4) {
+          dailyForecasts.push(item);
+          seenDays.add(dayKey);
+        }
+        
+        if (dailyForecasts.length === 4) {
+          break;
+        }
+      }
+      
       setWeatherData(currentWeatherResponse.data)
-      setForecastData(forecastResponse.data.list.slice(0, 4)) // Get next 4 forecasts as requested
+      setForecastData(dailyForecasts) // Get next 4 unique days
       
       console.log('Weather data fetched successfully', currentWeatherResponse.data);
     } catch (err) {
@@ -297,16 +321,16 @@ const WeatherApp = () => {
             <h3>4-Day Forecast</h3>
             <div className="forecast-container">
               {forecastData.map((day, index) => (
-                <div key={index} className="forecast-day">
-                  <div className="forecast-date">{new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                  <img 
-                    src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`} 
-                    alt={day.weather[0].description}
-                    className="forecast-icon"
-                  />
-                  <div className="forecast-temp">{Math.round(day.main.temp)}°</div>
-                </div>
-              ))}
+  <div key={index} className="forecast-day">
+    <div className="forecast-date">{new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+    <img 
+      src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`} 
+      alt={day.weather[0].description}
+      className="forecast-icon"
+    />
+    <div className="forecast-temp">{Math.round(day.main.temp)}°</div>
+  </div>
+))}
             </div>
           </div>
         </div>
