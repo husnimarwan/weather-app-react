@@ -11,6 +11,12 @@ const WeatherApp = () => {
   const [inputValue, setInputValue] = useState(city)
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [additionalCities, setAdditionalCities] = useState([
+    { name: 'New York', country: 'US' },
+    { name: 'Tokyo', country: 'JP' },
+    { name: 'Sydney', country: 'AU' }
+  ])
+  const [additionalWeather, setAdditionalWeather] = useState([])
 
   // Function to fetch weather data
   const fetchWeatherData = async (cityName) => {
@@ -34,14 +40,14 @@ const WeatherApp = () => {
           name: cityName,
           sys: { country: 'GB' },
           weather: [{ id: 800, main: 'Clear', description: 'clear sky', icon: '01d' }],
-          main: { temp: 22, feels_like: 23, humidity: 65, pressure: 1015 },
-          wind: { speed: 3.5 }
+          main: { temp: 22, feels_like: 23, humidity: 65, pressure: 1015, temp_min: 18, temp_max: 25 },
+          wind: { speed: 3.5, deg: 180 }
         };
         
         // Create mock forecast data
         const today = new Date();
         const mockForecast = [];
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 4; i++) { // 4-day forecast as requested
           const date = new Date(today);
           date.setDate(date.getDate() + i);
           
@@ -77,7 +83,7 @@ const WeatherApp = () => {
       );
       
       setWeatherData(currentWeatherResponse.data)
-      setForecastData(forecastResponse.data.list.slice(0, 5)) // Get next 5 forecasts
+      setForecastData(forecastResponse.data.list.slice(0, 4)) // Get next 4 forecasts as requested
       
       console.log('Weather data fetched successfully', currentWeatherResponse.data);
     } catch (err) {
@@ -103,6 +109,30 @@ const WeatherApp = () => {
       setLoading(false)
     }
   }
+
+  // Function to fetch additional city weather
+  const fetchAdditionalCityWeather = async (cities) => {
+    const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+    if (!API_KEY) return;
+    
+    const additionalData = [];
+    
+    for (const city of cities) {
+      try {
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city.name}&appid=${API_KEY}&units=metric`
+        );
+        additionalData.push({
+          ...response.data,
+          displayName: city.name
+        });
+      } catch (err) {
+        console.error(`Error fetching weather for ${city.name}:`, err);
+      }
+    }
+    
+    setAdditionalWeather(additionalData);
+  };
 
   // Function to fetch city suggestions
   const fetchCitySuggestions = async (input) => {
@@ -137,6 +167,7 @@ const WeatherApp = () => {
 
   useEffect(() => {
     fetchWeatherData(city)
+    fetchAdditionalCityWeather(additionalCities)
   }, [city])
 
   const handleSearch = (e) => {
@@ -158,7 +189,7 @@ const WeatherApp = () => {
   }
 
   const handleSuggestionClick = (suggestion) => {
-    setInputValue(`${suggestion.name}, ${suggestion.country}`)
+    setInputValue(suggestion.name)
     setCity(suggestion.name)
     setSuggestions([])
     setShowSuggestions(false)
@@ -181,16 +212,15 @@ const WeatherApp = () => {
 
   return (
     <div className="weather-app">
-      <h1>Weather Forecast App</h1>
-      
-      <form onSubmit={handleSearch} className="search-form">
-        <div className="search-container">
+      <div className="app-header">
+        <h1>🌤️ Weather App</h1>
+        <form onSubmit={handleSearch} className="search-form">
           <input 
             type="text" 
             value={inputValue}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            placeholder="Enter city name" 
+            placeholder="Search for a city..." 
             className="search-input"
             autoComplete="off"
           />
@@ -202,64 +232,103 @@ const WeatherApp = () => {
                   className="suggestion-item"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  {suggestion.name}, {suggestion.country}
+                  <span>{suggestion.name}</span>
+                  <span className="suggestion-country">{suggestion.country}</span>
                 </div>
               ))}
             </div>
           )}
-        </div>
-        <button type="submit" className="search-button">Search</button>
-      </form>
+          <button type="submit" className="search-button">🔍</button>
+        </form>
+      </div>
       
       {loading && <div className="loading">Loading weather data...</div>}
       
       {error && <div className="error">{error}</div>}
       
       {!error && weatherData && !loading && (
-        <div className="weather-container">
-          <div className="current-weather">
-            <h2>{weatherData.name}, {weatherData.sys.country}</h2>
-            <div className="weather-main">
-              <img 
-                src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} 
-                alt={weatherData.weather[0].description}
-                className="weather-icon"
-              />
-              <div className="temperature">
-                {Math.round(weatherData.main.temp)}°C
+        <div className="main-content">
+          <div className="main-weather-panel">
+            <div className="current-weather">
+              <div className="location">
+                <h2>{weatherData.name}, {weatherData.sys.country}</h2>
+                <p className="date">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
-            </div>
-            <div className="weather-details">
-              <p className="description">{weatherData.weather[0].description}</p>
-              <div className="weather-stats">
-                <p>Feels like: {Math.round(weatherData.main.feels_like)}°C</p>
-                <p>Humidity: {weatherData.main.humidity}%</p>
-                <p>Wind: {weatherData.wind.speed} m/s</p>
-                <p>Pressure: {weatherData.main.pressure} hPa</p>
+              
+              <div className="weather-overview">
+                <img 
+                  src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} 
+                  alt={weatherData.weather[0].description}
+                  className="weather-icon-large"
+                />
+                <div className="temperature-main">
+                  <span className="temp-value">{Math.round(weatherData.main.temp)}°</span>
+                </div>
+              </div>
+              
+              <div className="weather-description">
+                <p className="description">{weatherData.weather[0].description}</p>
+                <div className="temp-range">
+                  <span>↑ {Math.round(weatherData.main.temp_max)}°</span>
+                  <span>↓ {Math.round(weatherData.main.temp_min)}°</span>
+                </div>
+              </div>
+              
+              <div className="weather-details">
+                <div className="detail-item">
+                  <span className="detail-label">Wind</span>
+                  <span className="detail-value">{weatherData.wind.speed} m/s</span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">Humidity</span>
+                  <span className="detail-value">{weatherData.main.humidity}%</span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">Air Quality</span>
+                  <span className="detail-value">Good</span>
+                </div>
               </div>
             </div>
           </div>
           
-          {forecastData.length > 0 && (
-            <div className="forecast">
-              <h3>5-Day Forecast</h3>
-              <div className="forecast-container">
-                {forecastData.map((day, index) => (
-                  <div key={index} className="forecast-day">
-                    <p>{new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                    <img 
-                      src={`https://openweathermap.org/img/wn/${day.weather[0].icon}.png`} 
-                      alt={day.weather[0].description}
-                      className="forecast-icon"
-                    />
-                    <p>{Math.round(day.main.temp)}°C</p>
-                  </div>
-                ))}
-              </div>
+          <div className="forecast-panel">
+            <h3>4-Day Forecast</h3>
+            <div className="forecast-container">
+              {forecastData.map((day, index) => (
+                <div key={index} className="forecast-day">
+                  <div className="forecast-date">{new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                  <img 
+                    src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`} 
+                    alt={day.weather[0].description}
+                    className="forecast-icon"
+                  />
+                  <div className="forecast-temp">{Math.round(day.main.temp)}°</div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       )}
+      
+      <div className="bottom-cards">
+        {additionalWeather.map((weather, index) => (
+          <div key={index} className="city-card">
+            <div className="city-name">{weather.displayName}</div>
+            <img 
+              src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} 
+              alt={weather.weather[0].description}
+              className="bottom-weather-icon"
+            />
+            <div className="bottom-temp">{Math.round(weather.main.temp)}°</div>
+            <div className="bottom-details">
+              <span>Humidity: {weather.main.humidity}%</span>
+              <span>Wind: {weather.wind.speed} m/s</span>
+            </div>
+          </div>
+        ))}
+      </div>
       
       {!weatherData && !error && !loading && (
         <div className="no-data">
