@@ -16,8 +16,6 @@ A beautiful and responsive weather application built with React and Vite that di
 
 ![Weather App Screenshot](screenshot.png)
 
-_Note: Add your actual screenshot to the `screenshots/` directory with the filename `weather-app-screenshot.png`_
-
 ## Setup
 
 1. Get a free API key from [OpenWeatherMap](https://openweathermap.org/api)
