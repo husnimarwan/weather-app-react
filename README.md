@@ -51,6 +51,27 @@ This app uses the OpenWeatherMap API to fetch real weather data. You can find mo
 
 Feel free to submit issues or pull requests to improve the application.
 
+## Docker Deployment
+
+This application can be easily deployed using Docker. To build and run the application in a container:
+
+### Using Docker:
+```bash
+# Build the image
+docker build -t weather-app-react .
+
+# Run the container
+docker run -p 8080:80 weather-app-react
+```
+
+### Using Docker Compose:
+```bash
+# Build and run with docker-compose
+docker-compose up --build
+```
+
+The application will be available at `http://localhost:8080`
+
 ## Screenshots Directory
 
 If you'd like to add your own screenshots of the app:

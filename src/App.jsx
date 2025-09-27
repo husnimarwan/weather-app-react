@@ -26,9 +26,13 @@ const WeatherApp = () => {
     
     try {
       // Log the API key to verify it's loaded correctly (for debugging)
-      const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-      console.log('API Key loaded:', API_KEY ? 'Yes' : 'No')
-      console.log('API Key length:', API_KEY?.length || 0)
+      // Try multiple ways to access the API key since import.meta.env might not work in production builds
+      const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || window._env_?.VITE_OPENWEATHER_API_KEY || globalThis.__vite_env__?.VITE_OPENWEATHER_API_KEY;
+      console.log('API Key loaded via import.meta.env:', import.meta.env.VITE_OPENWEATHER_API_KEY ? 'Yes' : 'No');
+      console.log('API Key loaded via window._env_:', window._env_?.VITE_OPENWEATHER_API_KEY ? 'Yes' : 'No');
+      console.log('API Key loaded via globalThis.__vite_env__:', globalThis.__vite_env__?.VITE_OPENWEATHER_API_KEY ? 'Yes' : 'No');
+      console.log('API Key loaded (final):', API_KEY ? 'Yes' : 'No');
+      console.log('API Key length:', API_KEY?.length || 0);
       
       // Check if API key exists and has proper length
       if (!API_KEY || API_KEY.length === 0) {

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  weather-app:
+    build: .
+    ports:
+      - "8080:80"
+    # Optional: Add your OpenWeatherMap API key to fetch real weather data
+    # If not provided, the app will use mock data
+    # environment:
+    #   - VITE_OPENWEATHER_API_KEY=your_api_key_here
+    restart: unless-stopped
+    # Optional: Add health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
